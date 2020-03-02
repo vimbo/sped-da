@@ -458,7 +458,7 @@ class Dacanc extends Common
         $this->pdf->textBox($x, $y, $w, 4, $texto, $aFont, 'T', 'L', 0, '');
         $texto = "DaCanccteNFePHP ver. "
             . $this->version
-            .  "  Powered by NFePHP (GNU/GPLv3 GNU/LGPLv3) © www.nfephp.org";
+            .  "  Gerado por https://www.vimbo.com.br";
         $aFont = array('font'=>$this->fontePadrao,'size'=>6,'style'=>'I');
         $this->pdf->textBox($x, $y, $w, 4, $texto, $aFont, 'T', 'R', 0, 'http://www.nfephp.org');
     }

@@ -520,7 +520,7 @@ class Dacce extends Common
             'style' => 'I'
         );
         $this->pdf->textBox($x, $y, $w, 4, $texto, $aFont, 'T', 'L', 0, '');
-        $texto = "Powered by NFePHP®";
+        $texto = "Gerado por https://www.vimbo.com.br";
         $aFont = array(
             'font'  => $this->fontePadrao,
             'size'  => 6,

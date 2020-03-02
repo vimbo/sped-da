@@ -3398,7 +3398,7 @@ class Danfe extends Common
         $texto = "Impresso em ". date('d/m/Y') . " as " . date('H:i:s')
             . '  ' . $this->creditos;
         $this->pdf->textBox($x, $y, $w, 0, $texto, $aFont, 'T', 'L', false);
-        $texto = "Powered by NFePHP®";
+        $texto = "Gerado por https://www.vimbo.com.br";
         $this->pdf->textBox($x, $y, $w, 0, $texto, $aFont, 'T', 'R', false, '');
     }
 

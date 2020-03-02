@@ -1194,7 +1194,7 @@ class Damdfe extends Common
         $w = $this->wPrint - 4;
         $aFont = array('font' => $this->fontePadrao, 'size' => 6, 'style' => 'I');
         $this->pdf->textBox($x, $y, $w, 4, $texto, $aFont, 'T', 'L', 0, '');
-        $texto = $this->creditos . "  Powered by NFePHP®";
+        $texto = $this->creditos . "  Gerado por https://www.vimbo.com.br";
         $this->pdf->textBox($x, $y, $w, 0, $texto, $aFont, 'T', 'R', false, '');
     }
 

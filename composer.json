@@ -20,8 +20,14 @@
     "require": {
         "php" : ">= 7.0",
         "tecnickcom/tc-lib-barcode": "^1.15",
-        "nfephp-org/sped-common": "^5.0"
+        "nfephp-org/sped-common": "dev-upstream"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://Bot-vimbo:5abd33dbc9d48f89301a2d4b96711ba27d6f75ca@github.com/vimbo/sped-common.git"
+        }
+    ],
     "require-dev": {
         "squizlabs/php_codesniffer": "^3.4",
         "phpunit/phpunit": "^5.7",

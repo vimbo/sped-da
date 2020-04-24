@@ -5,29 +5,17 @@ namespace NFePHP\DA\NFe;
 use InvalidArgumentException;
 use NFePHP\DA\Legacy\Dom;
 use NFePHP\DA\Legacy\Pdf;
-use NFePHP\DA\Legacy\Common;
+use \NFePHP\DA\Common\DaCommon;
 
-class Danfe extends Common
+class Danfe extends DaCommon
 {
 
-    /**
-     * alinhamento padrão do logo (C-Center)
-     *
-     * @var string
-     */
-    protected $logoAlign = 'C';
     /**
      * Posição
      * @var float
      */
     protected $yDados = 0;
     /**
-     * Numero DPEC
-     *
-     * @var string
-     */
-    protected $numero_registro_dpec = '';
-     /**
      * Parâmetro para exibir ou ocultar os valores do PIS/COFINS.
      * @var boolean
      */
@@ -65,20 +53,10 @@ class Danfe extends Common
      */
     protected $descProdQuebraLinha = true;
     /**
-     * objeto fpdf()
-     * @var \NFePHP\DA\Legacy\Pdf
-     */
-    protected $pdf;
-    /**
      * XML NFe
      * @var string
      */
     protected $xml;
-    /**
-     * path para logomarca em jpg
-     * @var string
-     */
-    protected $logomarca = '';
     /**
      * mesagens de erro
      * @var string
@@ -90,22 +68,6 @@ class Danfe extends Common
      */
     protected $errStatus = false;
     /**
-     * orientação da DANFE
-     * P-Retrato ou L-Paisagem
-     * @var string
-     */
-    protected $orientacao = 'P';
-    /**
-     * formato do papel
-     * @var string
-     */
-    protected $papel = 'A4';
-    /**
-     * Nome da Fonte para gerar o DANFE
-     * @var string
-     */
-    protected $fontePadrao = 'Times';
-    /**
      * Texto adicional da DANFE
      * @var string
      */
@@ -115,26 +77,6 @@ class Danfe extends Common
      * @var float
      */
     protected $wAdic = 0;
-    /**
-     * largura imprimivel, em milímetros
-     * @var float
-     */
-    protected $wPrint;
-    /**
-     * Comprimento (altura) imprimivel, em milímetros
-     * @var float
-     */
-    protected $hPrint;
-    /**
-     * Altura maxima
-     * @var float
-     */
-    protected $maxH;
-    /**
-     * Largura maxima
-     * @var float
-     */
-    protected $maxW;
     /**
      * largura do canhoto (25mm) apenas para a formatação paisagem
      * @var float
@@ -265,16 +207,6 @@ class Danfe extends Common
      * @var \DOMNode
      */
     protected $compra;
-    /**
-     * ativa ou desativa o modo de debug
-     * @var integer
-     */
-    protected $debugmode = false;
-    /**
-     * Creditos para integrador
-     * @var string
-     */
-    protected $creditos = '';
     
     protected $textadicfontsize;
 
@@ -286,31 +218,9 @@ class Danfe extends Common
      */
     public function __construct($xml)
     {
-        $this->debugMode();
         $this->loadDoc($xml);
     }
-    
-    /**
-     * Ativa ou desativa o modo debug
-     * @param bool $activate
-     * @return bool
-     */
-    public function debugMode($activate = null)
-    {
-        if (isset($activate) && is_bool($activate)) {
-            $this->debugmode = $activate;
-        }
-        if ($this->debugmode) {
-            //ativar modo debug
-            error_reporting(E_ALL);
-            ini_set('display_errors', 'On');
-        } else {
-            //desativar modo debug
-            error_reporting(0);
-            ini_set('display_errors', 'Off');
-        }
-        return $this->debugmode;
-    }
+
 
     /**
      * Add the credits to the integrator in the footer message
@@ -320,18 +230,6 @@ class Danfe extends Common
     {
         $this->creditos = trim($message);
     }
-    
-    /**
-     * Dados brutos do PDF
-     * @return string
-     */
-    public function render()
-    {
-        if (empty($this->pdf)) {
-            $this->monta();
-        }
-        return $this->pdf->getPdf();
-    }
 
     /**
      * monta
@@ -340,52 +238,39 @@ class Danfe extends Common
      * A definição de margens e posições iniciais para a impressão são estabelecidas
      * pelo conteúdo da funçao e podem ser modificados.
      *
-     * @param  string $orientacao (Opcional) Estabelece a orientação da impressão
-     *  (ex. P-retrato), se nada for fornecido será usado o padrão da NFe
-     * @param  string $papel      (Opcional) Estabelece o tamanho do papel (ex. A4)
+
      * @return string O ID da NFe numero de 44 digitos extraido do arquivo XML
      */
-    public function monta(
-        $logo = '',
-        $orientacao = '',
-        $papel = 'A4',
-        $logoAlign = 'C',
-        $depecNumReg = '',
-        $margSup = 2,
-        $margEsq = 2,
-        $margInf = 2
+    protected function monta(
+        $logo = ''
     ) {
         $this->pdf = '';
-        $this->logomarca = $logo;
+        $this->logomarca = $this->adjustImage($logo);
         //se a orientação estiver em branco utilizar o padrão estabelecido na NF
-        if ($orientacao == '') {
+        if (empty($this->orientacao)) {
             if ($this->tpImp == '2') {
-                $orientacao = 'L';
+                $this->orientacao = 'L';
             } else {
-                $orientacao = 'P';
+                $this->orientacao = 'P';
             }
         }
-        $this->orientacao = $orientacao;
-        $this->papel = $papel;
-        $this->logoAlign = $logoAlign;
-        $this->numero_registro_dpec = $depecNumReg;
         //instancia a classe pdf
         $this->pdf = new Pdf($this->orientacao, 'mm', $this->papel);
         //margens do PDF, em milímetros. Obs.: a margem direita é sempre igual à
         //margem esquerda. A margem inferior *não* existe na FPDF, é definida aqui
         //apenas para controle se necessário ser maior do que a margem superior
         // posição inicial do conteúdo, a partir do canto superior esquerdo da página
-        $xInic = $margEsq;
+        $xInic = $this->margesq;
         if ($this->orientacao == 'P') {
-            if ($papel == 'A4') {
+            if ($this->papel == 'A4') {
                 $this->maxW = 210;
                 $this->maxH = 297;
             }
         } else {
-            if ($papel == 'A4') {
+            if ($this->papel == 'A4') {
                 $this->maxW = 297;
                 $this->maxH = 210;
-                $xInic = $margEsq+10;
+                $xInic = $this->margesq+10;
                 //se paisagem multiplica a largura do canhoto pela quantidade de canhotos
                 //$this->wCanhoto *= $this->qCanhoto;
             }
@@ -393,14 +278,14 @@ class Danfe extends Common
         //total inicial de paginas
         $totPag = 1;
         //largura imprimivel em mm: largura da folha menos as margens esq/direita
-        $this->wPrint = $this->maxW-($margEsq * 2);
+        $this->wPrint = $this->maxW-($this->margesq * 2);
         //comprimento (altura) imprimivel em mm: altura da folha menos as margens
         //superior e inferior
-        $this->hPrint = $this->maxH-$margSup-$margInf;
+        $this->hPrint = $this->maxH-$this->margsup-$this->marginf;
         // estabelece contagem de paginas
         $this->pdf->aliasNbPages();
         // fixa as margens
-        $this->pdf->setMargins($margEsq, $margSup);
+        $this->pdf->setMargins($this->margesq, $this->margsup);
         $this->pdf->setDrawColor(0, 0, 0);
         $this->pdf->setFillColor(255, 255, 255);
         // inicia o documento
@@ -613,13 +498,13 @@ class Danfe extends Common
         //montagem da primeira página
         $pag = 1;
         
-        $x = $margEsq;
-        $y = $margSup;
+        $x = $this->margesq;
+        $y = $this->margsup;
         //coloca o(s) canhoto(s) da NFe
         if ($this->orientacao == 'P') {
-            $y = $this->canhoto($margEsq, $margSup);
+            $y = $this->canhoto($this->margesq, $this->margsup);
         } else {
-            $this->canhoto($margEsq, $margSup);
+            $this->canhoto($this->margesq, $this->margsup);
             $x = 25;
         }
         //$x = $xInic;
@@ -689,7 +574,7 @@ class Danfe extends Common
         //loop para páginas seguintes
         for ($n = 2; $n <= $totPag; $n++) {
             // fixa as margens
-            $this->pdf->setMargins($margEsq, $margSup);
+            $this->pdf->setMargins($this->margesq, $this->margsup);
             //adiciona nova página
             $this->pdf->addPage($this->orientacao, $this->papel);
             //ajusta espessura das linhas
@@ -697,17 +582,17 @@ class Danfe extends Common
             //seta a cor do texto para petro
             $this->pdf->settextcolor(0, 0, 0);
             // posição inicial do relatorio
-            $x = $margEsq;
-            $y = $margSup;
+            $x = $this->margesq;
+            $y = $this->margsup;
             //coloca o cabeçalho na página adicional
             $y = $this->header($x, $y, $n, $totPag);
             //coloca os itens na página adicional
             $y = $this->itens($x, $y+1, $nInicial, $hDispo2, $n, $totPag, $hCabecItens);
             //coloca o rodapé da página
             if ($this->orientacao == 'P') {
-                $this->rodape($margEsq);
+                $this->rodape($this->margesq);
             } else {
-                $this->rodape($margEsq);
+                $this->rodape($this->margesq);
             }
             //se estiver na última página e ainda restar itens para inserir, adiciona mais uma página
             if ($n == $totPag && $this->qtdeItensProc < $qtdeItens) {
@@ -898,7 +783,7 @@ class Danfe extends Common
 
     protected function notaDPEC()
     {
-        return $this->numero_registro_dpec != '';
+        return !empty($this->numdepec);
     }
 
     /**
@@ -948,11 +833,6 @@ class Danfe extends Common
         // coloca o logo
         if (!empty($this->logomarca)) {
             $logoInfo = getimagesize($this->logomarca);
-            $type = strtolower(explode('/', $logoInfo['mime'])[1]);
-            if ($type == 'png') {
-                $this->logomarca = $this->imagePNGtoJPG($this->logomarca);
-                $type == 'jpg';
-            }
             //largura da imagem em mm
             $logoWmm = ($logoInfo[0]/72)*25.4;
             //altura da imagem em mm
@@ -992,7 +872,7 @@ class Danfe extends Common
                 $tw = $w;
             }
             $type = (substr($this->logomarca, 0, 7) === 'data://') ? 'jpg' : null;
-            $this->pdf->Image($this->logomarca, $xImg, $yImg, $nImgW, $nImgH, $type);
+            $this->pdf->Image($this->logomarca, $xImg, $yImg, $nImgW, $nImgH, 'jpeg');
         } else {
             $x1 = $x;
             $y1 = round($h/3+$y, 0);
@@ -1174,7 +1054,7 @@ class Danfe extends Common
         } else {
             $aFont = ['font'=>$this->fontePadrao, 'size'=>10, 'style'=>'B'];
             if ($this->notaDpec()) {
-                $texto = $this->numero_registro_dpec;
+                $texto = $this->numdepec;
                 $cStat = '';
             } else {
                 if (isset($this->nfeProc)) {
@@ -2660,9 +2540,9 @@ class Danfe extends Common
             $impostos .= $this->descricaoProdutoHelper($ICMS, "vBCFCPST", " BcFcpSt=%s");
             $impostos .= $this->descricaoProdutoHelper($ICMS, "pFCPST", " pFcpSt=%s%%");
             $impostos .= $this->descricaoProdutoHelper($ICMS, "vFCPST", " vFcpSt=%s");
-            $impostos .= $this->descricaoProdutoHelper($ICMS, "vBCSTRet", " vBcStRet=%s");
+            $impostos .= $this->descricaoProdutoHelper($ICMS, "vBCSTRet", " Retido na compra: BASE ICMS ST=%s");
             $impostos .= $this->descricaoProdutoHelper($ICMS, "pST", " pSt=%s");
-            $impostos .= $this->descricaoProdutoHelper($ICMS, "vICMSSTRet", " vIcmsStRet=%s");
+            $impostos .= $this->descricaoProdutoHelper($ICMS, "vICMSSTRet", " VALOR ICMS ST=%s");
         }
         if (!empty($ICMSUFDest)) {
             $impostos .= $this->descricaoProdutoHelper($ICMSUFDest, "pFCPUFDest", " pFCPUFDest=%s%%");
@@ -2762,7 +2642,7 @@ class Danfe extends Common
         $this->pdf->line($x+$w1, $y, $x+$w1, $y+$hmax);
         //DESCRIÇÃO DO PRODUTO / SERVIÇO
         $x += $w1;
-        $w2 = round($w*0.28, 0);
+        $w2 = round($w*0.25, 0);
         $texto = 'DESCRIÇÃO DO PRODUTO / SERVIÇO';
         $aFont = ['font'=>$this->fontePadrao, 'size'=>6, 'style'=>''];
         $this->pdf->textBox($x, $y, $w2, $h, $texto, $aFont, 'C', 'C', 0, '', false);
@@ -2800,7 +2680,7 @@ class Danfe extends Common
         $this->pdf->line($x+$w6, $y, $x+$w6, $y+$hmax);
         //QUANT
         $x += $w6;
-        $w7 = round($w*0.07, 0);
+        $w7 = round($w*0.08, 0);
         $texto = 'QUANT';
         $aFont = ['font'=>$this->fontePadrao, 'size'=>6, 'style'=>''];
         $this->pdf->textBox($x, $y, $w7, $h, $texto, $aFont, 'C', 'C', 0, '', false);
@@ -2819,39 +2699,46 @@ class Danfe extends Common
         $aFont = ['font'=>$this->fontePadrao, 'size'=>6, 'style'=>''];
         $this->pdf->textBox($x, $y, $w9, $h, $texto, $aFont, 'C', 'C', 0, '', false);
         $this->pdf->line($x+$w9, $y, $x+$w9, $y+$hmax);
-        //B.CÁLC ICMS
+        //VALOR DESCONTO
         $x += $w9;
-        $w10 = round($w*0.06, 0);
-        $texto = 'B.CÁLC ICMS';
+        $w10 = round($w*0.05, 0);
+        $texto = 'VALOR DESC';
         $aFont = ['font'=>$this->fontePadrao, 'size'=>6, 'style'=>''];
         $this->pdf->textBox($x, $y, $w10, $h, $texto, $aFont, 'C', 'C', 0, '', false);
         $this->pdf->line($x+$w10, $y, $x+$w10, $y+$hmax);
-        //VALOR ICMS
+        //B.CÁLC ICMS
         $x += $w10;
         $w11 = round($w*0.06, 0);
-        $texto = 'VALOR ICMS';
+        $texto = 'B.CÁLC ICMS';
         $aFont = ['font'=>$this->fontePadrao, 'size'=>6, 'style'=>''];
         $this->pdf->textBox($x, $y, $w11, $h, $texto, $aFont, 'C', 'C', 0, '', false);
         $this->pdf->line($x+$w11, $y, $x+$w11, $y+$hmax);
-        //VALOR IPI
+        //VALOR ICMS
         $x += $w11;
-        $w12 = round($w*0.05, 0);
-        $texto = 'VALOR IPI';
+        $w12 = round($w*0.06, 0);
+        $texto = 'VALOR ICMS';
         $aFont = ['font'=>$this->fontePadrao, 'size'=>6, 'style'=>''];
         $this->pdf->textBox($x, $y, $w12, $h, $texto, $aFont, 'C', 'C', 0, '', false);
         $this->pdf->line($x+$w12, $y, $x+$w12, $y+$hmax);
-        //ALÍQ. ICMS
+        //VALOR IPI
         $x += $w12;
-        $w13 = round($w*0.035, 0);
-        $texto = 'ALÍQ. ICMS';
+        $w13 = round($w*0.05, 0);
+        $texto = 'VALOR IPI';
         $aFont = ['font'=>$this->fontePadrao, 'size'=>6, 'style'=>''];
         $this->pdf->textBox($x, $y, $w13, $h, $texto, $aFont, 'C', 'C', 0, '', false);
         $this->pdf->line($x+$w13, $y, $x+$w13, $y+$hmax);
-        //ALÍQ. IPI
+        //ALÍQ. ICMS
         $x += $w13;
-        $w14 = $w-($w1+$w2+$w3+$w4+$w5+$w6+$w7+$w8+$w9+$w10+$w11+$w12+$w13);
-        $texto = 'ALÍQ. IPI';
+        $w14 = round($w*0.04, 0);
+        $texto = 'ALÍQ. ICMS';
+        $aFont = ['font'=>$this->fontePadrao, 'size'=>6, 'style'=>''];
         $this->pdf->textBox($x, $y, $w14, $h, $texto, $aFont, 'C', 'C', 0, '', false);
+        $this->pdf->line($x+$w14, $y, $x+$w14, $y+$hmax);
+        //ALÍQ. IPI
+        $x += $w14;
+        $w15 = $w-($w1+$w2+$w3+$w4+$w5+$w6+$w7+$w8+$w9+$w10+$w11+$w12+$w13+$w14);
+        $texto = 'ALÍQ. IPI';
+        $this->pdf->textBox($x, $y, $w15, $h, $texto, $aFont, 'C', 'C', 0, '', false);
         $this->pdf->line($oldX, $y+$h+1, $oldX + $w, $y+$h+1);
         $y += 5;
         //##################################################################################
@@ -2940,8 +2827,15 @@ class Danfe extends Common
                     $texto = number_format($prod->getElementsByTagName("vProd")->item(0)->nodeValue, 2, ",", ".");
                 }
                 $this->pdf->textBox($x, $y, $w9, $h, $texto, $aFont, 'T', $alinhamento, 0, '');
-                //Valor da Base de calculo
                 $x += $w9;
+                //Valor do Desconto
+                $vdesc = !empty($prod->getElementsByTagName("vDesc")->item(0)->nodeValue)
+                    ? $prod->getElementsByTagName("vDesc")->item(0)->nodeValue : 0;
+                    
+                $texto = number_format($vdesc, 2, ",", ".");
+                $this->pdf->textBox($x, $y, $w10, $h, $texto, $aFont, 'T', $alinhamento, 0, '');
+                //Valor da Base de calculo
+                $x += $w10;
                 if (isset($ICMS)) {
                     $texto = ! empty($ICMS->getElementsByTagName("vBC")->item(0)->nodeValue)
                     ? number_format(
@@ -2951,10 +2845,10 @@ class Danfe extends Common
                         "."
                     )
                     : '0, 00';
-                    $this->pdf->textBox($x, $y, $w10, $h, $texto, $aFont, 'T', $alinhamento, 0, '');
+                    $this->pdf->textBox($x, $y, $w11, $h, $texto, $aFont, 'T', $alinhamento, 0, '');
                 }
                 //Valor do ICMS
-                $x += $w10;
+                $x += $w11;
                 if (isset($ICMS)) {
                     $texto = ! empty($ICMS->getElementsByTagName("vICMS")->item(0)->nodeValue)
                     ? number_format(
@@ -2964,10 +2858,10 @@ class Danfe extends Common
                         "."
                     )
                     : '0, 00';
-                    $this->pdf->textBox($x, $y, $w11, $h, $texto, $aFont, 'T', $alinhamento, 0, '');
+                    $this->pdf->textBox($x, $y, $w12, $h, $texto, $aFont, 'T', $alinhamento, 0, '');
                 }
                 //Valor do IPI
-                $x += $w11;
+                $x += $w12;
                 if (isset($IPI)) {
                     $texto = ! empty($IPI->getElementsByTagName("vIPI")->item(0)->nodeValue)
                     ? number_format(
@@ -2980,9 +2874,9 @@ class Danfe extends Common
                 } else {
                     $texto = '';
                 }
-                $this->pdf->textBox($x, $y, $w12, $h, $texto, $aFont, 'T', $alinhamento, 0, '');
+                $this->pdf->textBox($x, $y, $w13, $h, $texto, $aFont, 'T', $alinhamento, 0, '');
                 // %ICMS
-                $x += $w12;
+                $x += $w13;
                 if (isset($ICMS)) {
                     $texto = ! empty($ICMS->getElementsByTagName("pICMS")->item(0)->nodeValue)
                     ? number_format(
@@ -2992,10 +2886,10 @@ class Danfe extends Common
                         "."
                     )
                     : '0, 00';
-                    $this->pdf->textBox($x, $y, $w13, $h, $texto, $aFont, 'T', 'C', 0, '');
+                    $this->pdf->textBox($x, $y, $w14, $h, $texto, $aFont, 'T', 'C', 0, '');
                 }
                 //%IPI
-                $x += $w13;
+                $x += $w14;
                 if (isset($IPI)) {
                     $texto = ! empty($IPI->getElementsByTagName("pIPI")->item(0)->nodeValue)
                     ? number_format(
@@ -3008,7 +2902,7 @@ class Danfe extends Common
                 } else {
                     $texto = '';
                 }
-                $this->pdf->textBox($x, $y, $w14, $h, $texto, $aFont, 'T', 'C', 0, '');
+                $this->pdf->textBox($x, $y, $w15, $h, $texto, $aFont, 'T', 'C', 0, '');
 
 
                 // Dados do Veiculo Somente para veiculo 0 Km
@@ -3738,16 +3632,5 @@ class Danfe extends Common
             $this->tpImp = $this->getTagValue($this->ide, "tpImp");
             $this->infProt = $this->dom->getElementsByTagName("infProt")->item(0);
         }
-    }
-    
-    private function imagePNGtoJPG($original)
-    {
-        $image = imagecreatefrompng($original);
-        ob_start();
-        imagejpeg($image, null, 100);
-        imagedestroy($image);
-        $stringdata = ob_get_contents(); // read from buffer
-        ob_end_clean();
-        return 'data://text/plain;base64,'.base64_encode($stringdata);
     }
 }

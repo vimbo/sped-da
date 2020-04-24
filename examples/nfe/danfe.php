@@ -6,18 +6,21 @@ require_once '../../bootstrap.php';
 use NFePHP\DA\NFe\Danfe;
 
 $xml = file_get_contents(__DIR__ . '/fixtures/mod55-nfe.xml');
-$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents(__DIR__ . '/../images/logo.jpg'));
+$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents(realpath(__DIR__ . '/../images/tulipas.png')));
+//$logo = realpath(__DIR__ . '/../images/tulipas.png');
 
 try {
     $danfe = new Danfe($xml);
     $danfe->debugMode(false);
     $danfe->creditsIntegratorFooter('WEBNFe Sistemas - http://www.webenf.com.br');
-    $danfe->monta($logo);
-    $pdf = $danfe->render();
-    //o pdf porde ser exibido como view no browser
-    //salvo em arquivo
-    //ou setado para download forçado no browser 
-    //ou ainda gravado na base de dados
+    // Caso queira mudar a configuracao padrao de impressao
+    /*  $this->printParameters( $orientacao = '', $papel = 'A4', $margSup = 2, $margEsq = 2 ); */
+    //Informe o numero DPEC
+    /*  $danfe->depecNumber('123456789'); */
+    //Configura a posicao da logo
+    /*  $danfe->logoParameters($logo, 'C', false);  */
+    //Gera o PDF
+    $pdf = $danfe->render($logo);
     header('Content-Type: application/pdf');
     echo $pdf;
 } catch (InvalidArgumentException $e) {

@@ -18,32 +18,30 @@ namespace NFePHP\DA\CTe;
 use Exception;
 use NFePHP\DA\Legacy\Dom;
 use NFePHP\DA\Legacy\Pdf;
-use NFePHP\DA\Legacy\Common;
+use NFePHP\DA\Common\DaCommon;
 
-class Daevento extends Common
+class Daevento extends DaCommon
 {
     public $chCTe;
-
-    protected $logoAlign = 'C';
     protected $yDados = 0;
-    protected $debugMode = 0;
-    protected $dadosEmitente = array();
-    protected $pdf;
+
     protected $xml;
-    protected $logomarca = '';
     protected $errMsg = '';
     protected $errStatus = false;
-    protected $orientacao = 'P';
-    protected $papel = 'A4';
     protected $destino = 'I';
     protected $pdfDir = '';
-    protected $fontePadrao = 'Times';
     protected $version = '0.1.1';
-    protected $wPrint;
-    protected $hPrint;
     protected $wCanhoto;
     protected $formatoChave = "#### #### #### #### #### #### #### #### #### #### ####";
+
     protected $id;
+    protected $dadosEmitente = array();
+    private $dom;
+    private $procEventoCTe;
+    private $evento;
+    private $infEvento;
+    private $retEvento;
+    private $rinfEvento;
     protected $tpAmb;
     protected $cOrgao;
     protected $xCorrecao;
@@ -57,14 +55,8 @@ class Daevento extends Common
     protected $dhRegEvento;
     protected $nProt;
     protected $tpEvento;
-
-    private $dom;
-    private $procEventoCTe;
-    private $evento;
-    private $infEvento;
-    private $retEvento;
-    private $rinfEvento;
-    private $creditos;
+    protected $creditos;
+    
 
     /**
      * __construct
@@ -75,28 +67,7 @@ class Daevento extends Common
     public function __construct($xml, $dadosEmitente)
     {
         $this->dadosEmitente = $dadosEmitente;
-        $this->debugMode();
         $this->loadDoc($xml);
-    }
-
-    /**
-     * Ativa ou desativa o modo debug
-     * @param bool $activate
-     * @return bool
-     */
-    public function debugMode($activate = null)
-    {
-        if (isset($activate) && is_bool($activate)) {
-            $this->debugmode = $activate;
-        }
-        if ($this->debugmode) {
-            error_reporting(E_ALL);
-            ini_set('display_errors', 'On');
-        } else {
-            error_reporting(0);
-            ini_set('display_errors', 'Off');
-        }
-        return $this->debugmode;
     }
 
     protected function loadDoc($xml)
@@ -137,18 +108,6 @@ class Daevento extends Common
     }
 
     /**
-     * Dados brutos do PDF
-     * @return string
-     */
-    public function render()
-    {
-        if (empty($this->pdf)) {
-            $this->monta();
-        }
-        return $this->pdf->getPdf();
-    }
-
-    /**
      * Add the credits to the integrator in the footer message
      * @param string $message
      */
@@ -165,30 +124,23 @@ class Daevento extends Common
      * pelo conteúdo da funçao e podem ser modificados.
      *
      * @param string $logo base64 da logomarca
-     * @param string $orientacao (Opcional) Estabelece a orientação da impressão (ex. P-retrato),
-     *               se nada for fornecido será usado o padrão da CTe
-     * @param string $papel (Opcional) Estabelece o tamanho do papel (ex. A4)
      * @return string O ID do evento extraido do arquivo XML
      */
-    public function monta(
-        $logo = '',
-        $orientacao = '',
-        $papel = 'A4',
-        $logoAlign = 'C'
+    protected function monta(
+        $logo = ''
     ) {
-        if ($orientacao == '') {
-            $orientacao = 'P';
+        if (!empty($logo)) {
+            $this->logomarca = $this->adjustImage($logo);
         }
-        $this->logomarca = $logo;
-        $this->orientacao = $orientacao;
-        $this->papel = $papel;
-        $this->logoAlign = $logoAlign;
+        if (empty($this->orientacao)) {
+            $this->orientacao = 'P';
+        }
+        // margens do PDF
+        $margSup = $this->margsup;
+        $margEsq = $this->margesq;
+        $margDir = $this->margesq;
         $this->pdf = new Pdf($this->orientacao, 'mm', $this->papel);
         if ($this->orientacao == 'P') {
-            // margens do PDF
-            $margSup = 2;
-            $margEsq = 2;
-            $margDir = 2;
             // posição inicial do relatorio
             $xInic = 1;
             $yInic = 1;
@@ -197,10 +149,6 @@ class Daevento extends Common
                 $maxH = 297;
             }
         } else {
-            // margens do PDF
-            $margSup = 3;
-            $margEsq = 3;
-            $margDir = 3;
             // posição inicial do relatorio
             $xInic = 5;
             $yInic = 5;
@@ -231,7 +179,7 @@ class Daevento extends Common
         $x = $xInic;
         $y = $yInic;
         //coloca o cabeçalho
-        $y = $this->header($x, $y, $pag, $situacao_externa);
+        $y = $this->header($x, $y, $pag);
         //coloca os dados da CCe
         $y = $this->body($x, $y + 15);
         //coloca os dados da CCe
@@ -502,21 +450,5 @@ class Daevento extends Common
         $texto = $this->creditos . "  Gerado por https://www.vimbo.com.br";
         $aFont = array('font' => $this->fontePadrao, 'size' => 6, 'style' => 'I');
         $this->pdf->textBox($x, $y, $w, 4, $texto, $aFont, 'T', 'R', 0, 'http://www.nfephp.org');
-    }
-
-    /**
-     * printDAEventoCTe
-     * @param string $nome
-     * @param string $destino
-     * @param string $printer
-     * @return type
-     */
-    public function printDAEventoCTe($nome = '', $destino = 'I', $printer = '')
-    {
-        $arq = $this->pdf->Output($nome, $destino);
-        if ($destino == 'S') {
-            //aqui pode entrar a rotina de impressão direta
-        }
-        return $arq;
     }
 }

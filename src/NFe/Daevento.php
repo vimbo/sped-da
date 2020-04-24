@@ -18,29 +18,18 @@ namespace NFePHP\DA\NFe;
 use Exception;
 use NFePHP\DA\Legacy\Dom;
 use NFePHP\DA\Legacy\Pdf;
-use NFePHP\DA\Legacy\Common;
+use NFePHP\DA\Common\DaCommon;
 
-class Daevento extends Common
+class Daevento extends DaCommon
 {
     public $chNFe;
 
-    protected $logoAlign = 'C';
     protected $yDados = 0;
-    protected $debugmode = false;
     protected $dadosEmitente = array();
-    protected $pdf;
     protected $xml;
-    protected $logomarca = '';
     protected $errMsg = '';
     protected $errStatus = false;
-    protected $orientacao = 'P';
-    protected $papel = 'A4';
-    protected $destino = 'I';
-    protected $pdfDir = '';
-    protected $fontePadrao = 'Times';
     protected $version = '0.1.4';
-    protected $wPrint;
-    protected $hPrint;
     protected $wCanhoto;
     protected $formatoChave = "#### #### #### #### #### #### #### #### #### #### ####";
     protected $id;
@@ -64,7 +53,6 @@ class Daevento extends Common
     private $infEvento;
     private $retEvento;
     private $rinfEvento;
-    private $creditos;
 
     /**
      * __construct
@@ -114,10 +102,14 @@ class Daevento extends Common
      * Dados brutos do PDF
      * @return string
      */
-    public function render()
-    {
+    public function render(
+        $logo = null,
+        $orientacao = 'P',
+        $papel = 'A4',
+        $logoAlign = 'C'
+    ) {
         if (empty($this->pdf)) {
-            $this->monta();
+            $this->monta($logo, $orientacao, $papel, $logoAlign);
         }
         return $this->pdf->getPdf();
     }
@@ -169,22 +161,18 @@ class Daevento extends Common
      * A definição de margens e posições iniciais para a impressão são estabelecidas no
      * pelo conteúdo da funçao e podem ser modificados.
      *
-     * @param  string $orientacao (Opcional) Estabelece a orientação da impressão (ex. P-retrato),
-     *  se nada for fornecido será usado o padrão da NFe
-     * @param  string $papel      (Opcional) Estabelece o tamanho do papel (ex. A4)
+     * @param  string $logo
      * @return string O ID do evento extraido do arquivo XML
      */
-    public function monta(
-        $logo = null,
-        $orientacao = 'P',
-        $papel = 'A4',
-        $logoAlign = 'C'
+    protected function monta(
+        $logo = ''
     ) {
-        $this->logomarca = $logo;
-        $this->fontePadrao = 'Times';
-        $this->orientacao = $orientacao;
-        $this->papel = $papel;
-        $this->logoAlign = $logoAlign;
+        if (!empty($logo)) {
+            $this->logomarca = $this->adjustImage($logo);
+        }
+        if (empty($this->orientacao)) {
+            $this->orientacao = 'P';
+        }
         $this->pdf = new Pdf($this->orientacao, 'mm', $this->papel);
         if ($this->orientacao == 'P') {
             // margens do PDF
@@ -300,7 +288,7 @@ class Daevento extends Common
                 $tw = round(2 * $w / 3, 0);
             }
             $type = (substr($this->logomarca, 0, 7) === 'data://') ? 'jpg' : null;
-            $this->pdf->image($this->logomarca, $xImg, $yImg, $nImgW, $nImgH, $type);
+            $this->pdf->image($this->logomarca, $xImg, $yImg, $nImgW, $nImgH, 'jpeg');
         } else {
             $x1 = $x;
             $y1 = round($h / 3 + $y, 0);

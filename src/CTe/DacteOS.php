@@ -960,15 +960,14 @@ class DacteOS extends DaCommon
      */
     protected function rodape($x, $y)
     {
-        $texto = "Impresso em  " . date('d/m/Y   H:i:s');
+        $texto = "Impresso em  " . date('d/m/Y   H:i:s') . ' ' .  $this->creditos;
         $w = $this->wPrint - 4;
         $aFont = array(
             'font' => $this->fontePadrao,
             'size' => 6,
             'style' => '');
         $this->pdf->textBox($x-1, $y+2, $w, 4, $texto, $aFont, 'T', 'L', 0, '');
-
-        $texto = $this->creditos .  "  Gerado por https://www.vimbo.com.br";
+        $texto = $this->powered ? "Powered by NFePHP®" : '';
         $this->pdf->textBox($x, $y, $w, 0, $texto, $aFont, 'T', 'R', false, '');
     }
 
@@ -2426,14 +2425,5 @@ class DacteOS extends DaCommon
         // prepare a base64 encoded "data url"
         $pic = 'data://text/plain;base64,' . base64_encode($qrcode);
         $this->pdf->image($pic, $xQr, $yQr, $wQr, $hQr, 'PNG');
-    }
-
-    /**
-     * Add the credits to the integrator in the footer message
-     * @param string $message
-     */
-    public function creditsIntegratorFooter($message = '')
-    {
-        $this->creditos = trim($message);
     }
 }

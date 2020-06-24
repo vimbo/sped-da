@@ -7,6 +7,7 @@ use NFePHP\DA\BPe\Dabpe;
 
 try {
     $xml = file_get_contents(__DIR__ . "/fixtures/bpe.xml");
+    //$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents(realpath(__DIR__ . '/../images/tulipas.png')));
     $logo = 'data://text/plain;base64,'. base64_encode(file_get_contents(realpath(__DIR__ . '/../images/logo.jpeg')));
     //$logo = realpath(__DIR__ . '/../images/tulipas.png');
 

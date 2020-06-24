@@ -188,7 +188,7 @@ class Dabpe extends DaCommon
         $this->enderAgencia = $this->dom->getElementsByTagName("enderAgencia")->item(0);
         $this->emit = $this->dom->getElementsByTagName("emit")->item(0);
         $this->enderEmit = $this->dom->getElementsByTagName("enderEmit")->item(0);
-        $this->infViagem = $this->dom->getElementsByTagName("infViagem")->item(0);
+        $this->infViagem = $this->dom->getElementsByTagName("infViagem");
         $this->infPassagem = $this->dom->getElementsByTagName("infPassagem")->item(0);
         $this->infPassageiro = $this->dom->getElementsByTagName("infPassageiro")->item(0);
         $this->infValorBPe = $this->dom->getElementsByTagName("infValorBPe")->item(0);
@@ -207,7 +207,7 @@ class Dabpe extends DaCommon
             ? $this->dom->getElementsByTagName('qrCodBPe')->item(0)->nodeValue : null;
         $this->urlChave = $this->urlConsulta($this->cUF);
     }
-    
+
     /**
      * Seta a largura do papel de impressão
      * @param int $width
@@ -216,12 +216,12 @@ class Dabpe extends DaCommon
     {
         $this->paperwidth = $width;
     }
-    
+
     public function printParameters($orientacao = '', $papel = 'A4', $margSup = 2, $margEsq = 2)
     {
         //do nothing
     }
-    
+
     /**
      * Renderiza o pdf e retorna como raw
      * @param string $logo
@@ -346,7 +346,7 @@ class Dabpe extends DaCommon
         $hMaxLinha = $this->hMaxLinha;
         $hBoxLinha = $this->hBoxLinha;
         $hLinha = $this->hLinha;
-        $tamPapelVert = 190 + (($qtdItens - 1) * $hLinha) + ($qtdPgto * $hLinha);
+        $tamPapelVert = 145 + (($qtdItens - 1) * $hLinha) + ($qtdPgto * $hLinha) + ($this->infViagem->length * 23);
         // verifica se existe informações adicionais
         $this->orientacao = 'P';
         $this->papel = [$this->paperwidth, $tamPapelVert];
@@ -378,6 +378,7 @@ class Dabpe extends DaCommon
         $this->pdf->setLineWidth(0.1); // define a largura da linha
         $this->pdf->setTextColor(0, 0, 0);
         $this->pdf->textBox(0, 0, $maxW, $maxH); // POR QUE PRECISO DESA LINHA?
+
         $hcabecalho = 16;//para cabeçalho (dados emitente mais logomarca)  (FIXO)
         if (strlen($this->getTagValue($this->emit, "xNome")) > 40) {
             $hcabecalho += 2;
@@ -446,7 +447,8 @@ class Dabpe extends DaCommon
         //creditos do integrador
         $aFont = array('font' => $this->fontePadrao, 'size' => 6, 'style' => 'I');
         $this->pdf->textBox($x, $this->hPrint-1, $this->wPrint, 3, $this->creditos, $aFont, 'T', 'L', false, '', false);
-        $texto = "Powered by NFePHP®";
+        $texto = '';
+        $texto = $this->powered ? "Powered by NFePHP®" : '';
         $this->pdf->textBox($x, $this->hPrint-1, $this->wPrint, 0, $texto, $aFont, 'T', 'R', false, '');
     }
 
@@ -505,7 +507,7 @@ class Dabpe extends DaCommon
         $this->pdf->textBox($xRs, $y, $wRs, $hTotal, $texto, $aFont, 'T', $alignEmit, false, '', false);
         return $hTotal;
     }
-    
+
     /**
      * Monta o cabeçalho do BPe
      * @param float $x
@@ -556,7 +558,7 @@ class Dabpe extends DaCommon
                 $nImgH = 18;
                 $nImgW = round($logoWmm * ($nImgH/$logoHmm), 0);
             }
-            $yImg = 15;
+            $yImg = $y;
             $this->pdf->image($this->logomarca, $xImg, $yImg, $nImgW, $nImgH, 'jpeg');
             $xRs = ($maxW * 0.4) + $margemInterna;
             $wRs = ($maxW * 0.6);
@@ -656,76 +658,85 @@ class Dabpe extends DaCommon
         $maxW = $this->wPrint;
         $w = ($maxW * 1);
         $hBox1 = 12;
-        $hBox2 = 11;
-        $origem = $this->getTagValue($this->infPassagem, "xLocOrig");
-        $uforigem = $this->getTagValue($this->ide, "UFIni");
-        $texto = "\nOrigem: " . $origem . "(" . $uforigem . ")";
-        $destino = $this->getTagValue($this->infPassagem, "xLocDest");
-        $ufdestino = $this->getTagValue($this->ide, "UFFim");
-        $texto = $texto . "\nDestino: " . $destino . "(" . $ufdestino . ")";
-        $dhViagem = $this->getTagValue($this->infViagem, "dhViagem");
-        $dhViagemformatado = new \DateTime($dhViagem);
-        $data = $dhViagemformatado->format('d/m/Y');
-        $hora = $dhViagemformatado->format('H:i:s');
-        $texto = "\n" . $texto . "\nData: " . $data . " | Horário: " . $hora;
-        $aFont = array('font' => $this->fontePadrao, 'size' => 10, 'style' => 'B');
-        $this->pdf->textBox($x, $y, $w, $hBox1, $texto, $aFont, 'T', 'C', false, '', false);
-        $hTotal += $hBox1;
-        if (!empty($this->getTagValue($this->infViagem, "prefixo"))) {
-            $prefixo = $this->getTagValue($this->infViagem, "prefixo");
-        } else {
-            $prefixo = "";
+        foreach ($this->infViagem as $infViagem) {
+            $origem = $this->getTagValue($this->infPassagem, "xLocOrig");
+            $uforigem = $this->getTagValue($this->ide, "UFIni");
+            $texto = "\nOrigem: " . $origem . "(" . $uforigem . ")";
+            $destino = $this->getTagValue($this->infPassagem, "xLocDest");
+            $ufdestino = $this->getTagValue($this->ide, "UFFim");
+            $texto = $texto . "\nDestino: " . $destino . "(" . $ufdestino . ")";
+            $dhViagem = $this->getTagValue($infViagem, "dhViagem");
+            $dhViagemformatado = new \DateTime($dhViagem);
+            $data = $dhViagemformatado->format('d/m/Y');
+            $hora = $dhViagemformatado->format('H:i:s');
+            $texto = "\n" . $texto . "\nData: " . $data . " | Horário: " . $hora;
+            $aFont = array('font' => $this->fontePadrao, 'size' => 10, 'style' => 'B');
+            $this->pdf->textBox($x, $y, $w, $hBox1, $texto, $aFont, 'T', 'C', false, '', false);
+            $hTotal += $hBox1;
+            if (!empty($this->getTagValue($infViagem, "prefixo"))) {
+                $prefixo = $this->getTagValue($infViagem, "prefixo");
+            } else {
+                $prefixo = "";
+            }
+            $linha = $this->getTagValue($infViagem, "xPercurso");
+            $tpServ = $this->getTagValue($infViagem, "tpServ");
+            $tipo = "Não Definido";
+            switch ($tpServ) {
+                case "1":
+                    $tipo = "Convencional com sanitário";
+                    break;
+                case "2":
+                    $tipo = "Convencional sem sanitário";
+                    break;
+                case "3":
+                    $tipo = "Semileito";
+                    break;
+                case "4":
+                    $tipo = "Leito com ar condicionado";
+                    break;
+                case "5":
+                    $tipo = "Leito sem ar condicionado";
+                    break;
+                case "6":
+                    $tipo = "Executivo";
+                    break;
+                case "7":
+                    $tipo = "Semiurbano";
+                    break;
+                case "8":
+                    $tipo = "Longitudinal";
+                    break;
+                case "9":
+                    $tipo = "Travessia";
+                    break;
+            }
+            $texto = '';
+            $tpTrecho = $this->getTagValue($infViagem, "tpTrecho");
+            if ($tpTrecho == 3) {
+                $hBox2 = 13;
+                $texto .= "\nCONEXÃO";
+            } else {
+                $hBox2 = 11;
+            }
+            $texto .= "\n(Poltrona: "
+                . $this->getTagValue($infViagem, "poltrona")
+                . " Plataforma: "
+                . $this->getTagValue($infViagem, "plataforma")
+                . ")";
+            $texto = $texto
+                . "\nPrefixo: "
+                . $prefixo
+                . "  Linha: "
+                . $linha
+                . "\nTipo: "
+                . $tipo
+                . "\n_____________________________________________________________";
+            $aFont = array('font' => $this->fontePadrao, 'size' => 7, 'style' => 'B');
+            $y += $hBox1;
+            $this->pdf->textBox($x, $y, $w, $hBox2, $texto, $aFont, 'T', 'C', false, '', false);
+            $hTotal += $hBox2;
+            $y += $hBox2;
         }
-        $linha = $this->getTagValue($this->infViagem, "xPercurso");
-        $tpServ = $this->getTagValue($this->infViagem, "tpServ");
-        $tipo = "Não Definido";
-        switch ($tpServ) {
-            case "1":
-                $tipo = "Convencional com sanitário";
-                break;
-            case "2":
-                $tipo = "Convencional sem sanitário";
-                break;
-            case "3":
-                $tipo = "Semileito";
-                break;
-            case "4":
-                $tipo = "Leito com ar condicionado";
-                break;
-            case "5":
-                $tipo = "Leito sem ar condicionado";
-                break;
-            case "6":
-                $tipo = "Executivo";
-                break;
-            case "7":
-                $tipo = "Semiurbano";
-                break;
-            case "8":
-                $tipo = "Longitudinal";
-                break;
-            case "9":
-                $tipo = "Travessia";
-                break;
-        }
-
-        $texto = "\n(Poltrona: "
-            . $this->getTagValue($this->infViagem, "poltrona")
-            . " Plataforma: "
-            . $this->getTagValue($this->infViagem, "plataforma")
-            . ")";
-        $texto = $texto
-            . "\nPrefixo: "
-            . $prefixo
-            . "  Linha: "
-            . $linha
-            . "\nTipo: "
-            . $tipo
-            . "\n_____________________________________________________________";
-        $aFont = array('font' => $this->fontePadrao, 'size' => 7, 'style' => 'B');
-        $y += $hBox1;
-        $this->pdf->textBox($x, $y, $w, $hBox2, $texto, $aFont, 'T', 'C', false, '', false);
-        $hTotal += $hBox2;
         return $hTotal;
     }
 
@@ -962,7 +973,6 @@ class Dabpe extends DaCommon
             $texto = "TIPO DE DESCONTO: " . $xtpDesconto;
             $this->pdf->textBox($x, $y, $w, $hLinha, $texto, $aFontTex, 'T', 'C', false, '', false);
         }
-
         $texto = "BP-e nº " . $nBP . " Série " . $serieBPe . " " . $dhEmiLocalFormat;
         $y += $this->hLinha;
         $this->pdf->textBox($x, $y, $w, $hLinha, $texto, $aFontTit, 'T', 'C', false, '', false);
@@ -1017,7 +1027,7 @@ class Dabpe extends DaCommon
 
     protected function qrCodeDABPE($x = 0, $y = 0, $h = 0)
     {
-        $y += 30;
+        $y += 38;
         $margemInterna = $this->margemInterna;
         $maxW = $this->wPrint;
         $w = ($maxW * 1) + 4;

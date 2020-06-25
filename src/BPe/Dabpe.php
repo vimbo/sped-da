@@ -526,13 +526,14 @@ class Dabpe extends DaCommon
         $emitFone = $this->getTagValue($this->enderEmit, "fone");
         $foneLen = strlen($emitFone);
         if ($foneLen > 0) {
-            $ddd = substr($emitFone, 0, 2);
+            $emitFone = $this->formatPhone($emitFone);
+            /*$ddd = substr($emitFone, 0, 2);
             $fone1 = substr($emitFone, -8);
             $digito9 = ' ';
             if ($foneLen == 11) {
                 $digito9 = substr($emitFone, 2, 1);
             }
-            $emitFone = ' - (' . $ddd . ') ' . $digito9 . ' ' . substr($fone1, 0, 4) . '-' . substr($fone1, -4);
+            $emitFone = ' - (' . $ddd . ') ' . $digito9 . ' ' . substr($fone1, 0, 4) . '-' . substr($fone1, -4);*/
         } else {
             $emitFone = '';
         }

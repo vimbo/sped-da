@@ -308,13 +308,14 @@ class Daevento extends DaCommon
         $CEP = $this->formatField($CEP, "#####-###");
         $mun = (isset($this->dadosEmitente['municipio']) ? $this->dadosEmitente['municipio'] : '');
         $UF = (isset($this->dadosEmitente['UF']) ? $this->dadosEmitente['UF'] : '');
-        $fone = (isset($this->dadosEmitente['telefone']) ? $this->dadosEmitente['telefone'] : '');
+        $fone = (isset($this->dadosEmitente['telefone']) ? $this->formatPhone($this->dadosEmitente['telefone']) : '');
         $email = (isset($this->dadosEmitente['email']) ? $this->dadosEmitente['email'] : '');
         $foneLen = strlen($fone);
         if ($foneLen > 0) {
-            $fone2 = substr($fone, 0, $foneLen - 4);
-            $fone1 = substr($fone, 0, $foneLen - 8);
-            $fone = '(' . $fone1 . ') ' . substr($fone2, - 4) . '-' . substr($fone, - 4);
+            $fone = $this->formatPhone($fone);
+            //$fone2 = substr($fone, 0, $foneLen - 4);
+            //$fone1 = substr($fone, 0, $foneLen - 8);
+            //$fone = '(' . $fone1 . ') ' . substr($fone2, - 4) . '-' . substr($fone, - 4);
         } else {
             $fone = '';
         }

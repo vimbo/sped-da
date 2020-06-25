@@ -928,7 +928,7 @@ class Danfe extends DaCommon
             $y1 = $y1+5;
             $aFont = ['font'=>$this->fontePadrao, 'size'=>8, 'style'=>''];
             $fone = ! empty($this->enderEmit->getElementsByTagName("fone")->item(0)->nodeValue)
-            ? $this->enderEmit->getElementsByTagName("fone")->item(0)->nodeValue
+            ? $this->formatPhone($this->enderEmit->getElementsByTagName("fone")->item(0)->nodeValue)
             : '';
             $lgr = $this->getTagValue($this->enderEmit, "xLgr");
             $nro = $this->getTagValue($this->enderEmit, "nro");

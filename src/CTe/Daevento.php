@@ -268,9 +268,10 @@ class Daevento extends DaCommon
         $email = (isset($this->dadosEmitente['email']) ? $this->dadosEmitente['email'] : '');
         $foneLen = strlen($fone);
         if ($foneLen > 0) {
-            $fone2 = substr($fone, 0, $foneLen - 4);
-            $fone1 = substr($fone, 0, $foneLen - 8);
-            $fone = '(' . $fone1 . ') ' . substr($fone2, -4) . '-' . substr($fone, -4);
+            $fone = $this->formatPhone($fone);
+            //$fone2 = substr($fone, 0, $foneLen - 4);
+            //$fone1 = substr($fone, 0, $foneLen - 8);
+            //$fone = '(' . $fone1 . ') ' . substr($fone2, -4) . '-' . substr($fone, -4);
         } else {
             $fone = '';
         }

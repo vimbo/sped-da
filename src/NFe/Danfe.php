@@ -48,6 +48,11 @@ class Danfe extends DaCommon
      */
     public $descProdInfoComplemento = true;
     /**
+     *`Parâmetro que habilita a geração de automatica de informações
+     * @var boolean
+     */
+    public $gerarInformacoesAutomaticas = true;
+    /**
      * Parâmetro do controle se deve gerar quebras de linha com "\n" a partir de ";" na descrição do produto.
      * @var boolean
      */
@@ -578,8 +583,8 @@ class Danfe extends DaCommon
         if ($this->dup->length > 0) {
             $y = $this->fatura($x, $y+1);
         } else {
-            //Se somente tiver a forma de pagamento sem pagamento ou outros não imprimir nada
-            if (count($formaPag)=='1' && (isset($formaPag[90]) || isset($formaPag[99]))) {
+            //Se somente tiver a forma de pagamento sem pagamento não imprimir nada
+            if (count($formaPag)=='1' && isset($formaPag[90])) {
                 $y = $y;
             } else {
                 //caso tenha mais de uma forma de pagamento ou seja diferente de boleto exibe a
@@ -1963,8 +1968,8 @@ class Danfe extends DaCommon
                 $h = 6;
                 $texto = '';
                 if (isset($formaPagamento[$fPag])) {
-                    /*Exibir Item sem pagamento ou outros?*/
-                    if ($fPag=='90' || $fPag=='99') {
+                    /*Exibir Item sem pagamento*/
+                    if ($fPag=='90') {
                         continue;
                     }
                     $aFont = ['font'=>$this->fontePadrao, 'size'=>6, 'style'=>''];
@@ -2019,7 +2024,7 @@ class Danfe extends DaCommon
      */
     protected function impostoHelper($x, $y, $w, $h, $titulo, $campoImposto)
     {
-        $valorImposto = '0, 00';
+        $valorImposto = '0,00';
         $the_field = $this->ICMSTot->getElementsByTagName($campoImposto)->item(0);
         if (isset($the_field)) {
             $the_value = $the_field->nodeValue;
@@ -2818,7 +2823,7 @@ class Danfe extends DaCommon
                         ",",
                         "."
                     )
-                    : '0, 00';
+                    : '0,00';
                     $this->pdf->textBox($x, $y, $w11, $h, $texto, $aFont, 'T', $alinhamento, 0, '');
                 }
                 //Valor do ICMS
@@ -2831,7 +2836,7 @@ class Danfe extends DaCommon
                         ",",
                         "."
                     )
-                    : '0, 00';
+                    : '0,00';
                     $this->pdf->textBox($x, $y, $w12, $h, $texto, $aFont, 'T', $alinhamento, 0, '');
                 }
                 //Valor do IPI
@@ -2859,7 +2864,7 @@ class Danfe extends DaCommon
                         ",",
                         "."
                     )
-                    : '0, 00';
+                    : '0,00';
                     $this->pdf->textBox($x, $y, $w14, $h, $texto, $aFont, 'T', 'C', 0, '');
                 }
                 //%IPI
@@ -3430,6 +3435,9 @@ class Danfe extends DaCommon
      */
     protected function geraInformacoesDaTagCompra()
     {
+        if (!$this->gerarInformacoesAutomaticas) {
+            return '';
+        }
         $saida = "";
         if (isset($this->compra)) {
             if (! empty($this->compra->getElementsByTagName("xNEmp")->item(0)->nodeValue)) {
@@ -3494,6 +3502,9 @@ class Danfe extends DaCommon
      */
     protected function geraInformacoesDasNotasReferenciadas()
     {
+        if (!$this->gerarInformacoesAutomaticas) {
+            return '';
+        }
         $formaNfeRef = "\r\nNFe Ref.: série:%d número:%d emit:%s em %s [%s]";
         $formaCTeRef = "\r\nCTe Ref.: série:%d número:%d emit:%s em %s [%s]";
         $formaNfRef = "\r\nNF  Ref.: série:%d numero:%d emit:%s em %s modelo: %d";

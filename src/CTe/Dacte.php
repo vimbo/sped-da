@@ -1104,7 +1104,7 @@ class Dacte extends DaCommon
      */
     protected function rodape($x, $y)
     {
-        $texto = "Impresso em  " . date('d/m/Y H:i:s') . ' ' . $this->creditos;
+        $texto = "Impresso em  " . date('d/m/Y H:i:s');
         $w = $this->wPrint - 4;
         $aFont = array(
             'font' => $this->fontePadrao,
@@ -1112,7 +1112,7 @@ class Dacte extends DaCommon
             'style' => '');
         $this->pdf->textBox($x, $y, $w, 4, $texto, $aFont, 'T', 'L', 0, '');
         $texto = '';
-        $texto = $this->powered ? "Powered by NFePHP®" : '';
+        $texto = $this->powered ? $this->creditos : '';
         $aFont = array(
             'font' => $this->fontePadrao,
             'size' => 6,

@@ -502,11 +502,11 @@ class Daevento extends DaCommon
         $aFont = ['font' => $this->fontePadrao,'size' => 10,'style' => 'I'];
         $this->pdf->textBox($x, $y, $w, 20, $texto, $aFont, 'T', 'C', 0, '', false);
         $y = $this->hPrint - 4;
-        $texto = "Impresso em  " . date('d/m/Y   H:i:s') . ' ' . $this->creditos;
+        $texto = "Impresso em  " . date('d/m/Y   H:i:s');
         $w = $this->wPrint - 4;
         $aFont = ['font' => $this->fontePadrao,'size' => 6,'style' => 'I'];
         $this->pdf->textBox($x, $y, $w, 4, $texto, $aFont, 'T', 'L', 0, '');
-        $texto = $this->powered ? "Powered by NFePHP®" : '';
+        $texto = $this->powered ? $this->creditos : '';
         $aFont = ['font' => $this->fontePadrao,'size' => 6,'style' => 'I'];
         $this->pdf->textBox($x, $y, $w, 4, $texto, $aFont, 'T', 'R', 0, 'http://www.nfephp.org');
     }

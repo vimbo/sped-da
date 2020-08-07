@@ -3273,8 +3273,7 @@ class Danfe extends DaCommon
               $x = $this->wCanhoto;
         }
         $aFont = ['font'=>$this->fontePadrao, 'size'=>6, 'style'=>'I'];
-        $texto = "Impresso em ". date('d/m/Y') . " as " . date('H:i:s')
-            . '  ' . $this->creditos;
+        $texto = "Impresso em ". date('d/m/Y') . " as " . date('H:i:s');
         $this->pdf->textBox($x, $y, $w, 0, $texto, $aFont, 'T', 'L', false);
         $texto = $this->powered ? $this->creditos : '';
         $this->pdf->textBox($x, $y, $w, 0, $texto, $aFont, 'T', 'R', false, '');

@@ -324,7 +324,7 @@ class Danfe extends DaCommon
         if ($this->exibirValorTributos) {
             $flagVTT = strpos(strtolower(trim($this->textoAdic)), 'valor');
             $flagVTT = $flagVTT || strpos(strtolower(trim($this->textoAdic)), 'vl');
-            $flagVTT = $flagVTT && strpos(strtolower(trim($this->textoAdic)), 'aprox');
+            $flagVTT = $flagVTT || strpos(strtolower(trim($this->textoAdic)), 'aprox');
             $flagVTT = $flagVTT && (strpos(strtolower(trim($this->textoAdic)), 'trib') ||
                     strpos(strtolower(trim($this->textoAdic)), 'imp'));
             $vTotTrib = $this->getTagValue($this->ICMSTot, 'vTotTrib');

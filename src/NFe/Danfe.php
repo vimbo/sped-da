@@ -352,7 +352,7 @@ class Danfe extends DaCommon
         if ($this->exibirValorTributos) {
             $flagVTT  = strpos(strtolower(trim($this->textoAdic)), 'valor');
             $flagVTT  = $flagVTT || strpos(strtolower(trim($this->textoAdic)), 'vl');
-            $flagVTT  = $flagVTT && strpos(strtolower(trim($this->textoAdic)), 'aprox');
+            $flagVTT  = $flagVTT || strpos(strtolower(trim($this->textoAdic)), 'aprox');
             $flagVTT  = $flagVTT && (strpos(strtolower(trim($this->textoAdic)), 'trib') ||
                     strpos(strtolower(trim($this->textoAdic)), 'imp'));
             $vTotTrib = $this->getTagValue($this->ICMSTot, 'vTotTrib');
@@ -2601,6 +2601,7 @@ class Danfe extends DaCommon
             $impostos .= $this->descricaoProdutoHelper($ICMS, "pST", " pSt=%s");
             $impostos .= $this->descricaoProdutoHelper($ICMS, "vICMSSTRet", " VALOR ICMS ST=%s");
         }
+        /** Retirado a pedido da Jéssica 
         if (! empty($ICMSUFDest)) {
             $impostos .= $this->descricaoProdutoHelper($ICMSUFDest, "pFCPUFDest", " pFCPUFDest=%s%%");
             $impostos .= $this->descricaoProdutoHelper($ICMSUFDest, "pICMSUFDest", " pICMSUFDest=%s%%");
@@ -2608,7 +2609,7 @@ class Danfe extends DaCommon
             $impostos .= $this->descricaoProdutoHelper($ICMSUFDest, "vFCPUFDest", " vFCPUFDest=%s");
             $impostos .= $this->descricaoProdutoHelper($ICMSUFDest, "vICMSUFDest", " vICMSUFDest=%s");
             $impostos .= $this->descricaoProdutoHelper($ICMSUFDest, "vICMSUFRemet", " vICMSUFRemet=%s");
-        }
+        }*/
         $infAdProd = ! empty($itemProd->getElementsByTagName('infAdProd')->item(0)->nodeValue)
             ? substr(
                 $this->anfaveaDANFE($itemProd->getElementsByTagName('infAdProd')->item(0)->nodeValue),
@@ -3413,9 +3414,8 @@ class Danfe extends DaCommon
         }
         $aFont = ['font' => $this->fontePadrao, 'size' => 6, 'style' => 'I'];
         $texto = "Impresso em " . date('d/m/Y') . " as " . date('H:i:s')
-            . '  ' . $this->creditos;
         $this->pdf->textBox($x, $y, $w, 0, $texto, $aFont, 'T', 'L', false);
-        $texto = $this->powered ? "Powered by NFePHP®" : '';
+        $texto = $this->powered ? $this->creditos : '';
         $this->pdf->textBox($x, $y, $w, 0, $texto, $aFont, 'T', 'R', false, '');
     }
 

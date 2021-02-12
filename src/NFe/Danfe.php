@@ -2601,7 +2601,7 @@ class Danfe extends DaCommon
             $impostos .= $this->descricaoProdutoHelper($ICMS, "pST", " pSt=%s");
             $impostos .= $this->descricaoProdutoHelper($ICMS, "vICMSSTRet", " VALOR ICMS ST=%s");
         }
-        /** Retirado a pedido da Jéssica 
+        /** Retirado a pedido da Jéssica
         if (! empty($ICMSUFDest)) {
             $impostos .= $this->descricaoProdutoHelper($ICMSUFDest, "pFCPUFDest", " pFCPUFDest=%s%%");
             $impostos .= $this->descricaoProdutoHelper($ICMSUFDest, "pICMSUFDest", " pICMSUFDest=%s%%");

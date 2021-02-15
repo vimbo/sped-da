@@ -1241,7 +1241,7 @@ class Danfe extends DaCommon
             $h = 15;
             $w = $maxW - (2 * $x);
             $this->pdf->settextcolor(90, 90, 90);
-            
+
             foreach ($resp['message'] as $msg) {
                 $aFont = ['font' => $this->fontePadrao, 'size' => 48, 'style' => 'B'];
                 $this->pdf->textBox($x, $y, $w, $h, $msg, $aFont, 'C', 'C', 0, '');
@@ -2817,7 +2817,7 @@ class Danfe extends DaCommon
                 $ICMS         = $imposto->getElementsByTagName("ICMS")->item(0);
                 $IPI          = $imposto->getElementsByTagName("IPI")->item(0);
                 $textoProduto = $this->descricaoProduto($thisItem);
-                
+
 
                 // Posição y dos dados das unidades tributaveis.
                 $yTrib = $this->pdf->fontSize + .5;
@@ -3413,7 +3413,7 @@ class Danfe extends DaCommon
             $x = $this->wCanhoto;
         }
         $aFont = ['font' => $this->fontePadrao, 'size' => 6, 'style' => 'I'];
-        $texto = "Impresso em " . date('d/m/Y') . " as " . date('H:i:s')
+        $texto = "Impresso em " . date('d/m/Y') . " as " . date('H:i:s');
         $this->pdf->textBox($x, $y, $w, 0, $texto, $aFont, 'T', 'L', false);
         $texto = $this->powered ? $this->creditos : '';
         $this->pdf->textBox($x, $y, $w, 0, $texto, $aFont, 'T', 'R', false, '');

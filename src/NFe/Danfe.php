@@ -845,12 +845,11 @@ class Danfe extends DaCommon
         if (!isset($this->nfeProc)) {
             $resp['status'] = false;
             $resp['message'][] = 'NFe NÃO PROTOCOLADA';
-        } elseif ($this->getTagValue($this->ide, "tpAmb") == '2') {
-            $resp['status'] = false;
-            $resp['message'][] =  "NFe EMITIDA EM HOMOLOGAÇÃO";
-        }
-
-        if($this->nfeProc){
+        } else {
+            if ($this->getTagValue($this->ide, "tpAmb") == '2') {
+                $resp['status'] = false;
+                $resp['message'][] =  "NFe EMITIDA EM HOMOLOGAÇÃO";
+            }
             $retEvento = $this->nfeProc->getElementsByTagName('retEvento')->item(0);
             $cStat = $this->getTagValue($this->nfeProc, "cStat");
             if ($cStat == '110' ||
@@ -873,7 +872,12 @@ class Danfe extends DaCommon
                 $tpEvento= $this->getTagValue($infEvento, "tpEvento");
                 $dhEvento = date("d/m/Y H:i:s", $this->toTimestamp($this->getTagValue($infEvento, "dhRegEvento")));
                 $nProt = $this->getTagValue($infEvento, "nProt");
-                if ($tpEvento == '110111' && ($cStat == '101' || $cStat == '151' || $cStat == '135' || $cStat == '155')) {
+                if ($tpEvento == '110111' &&
+                    ($cStat == '101' ||
+                     $cStat == '151' ||
+                     $cStat == '135' ||
+                     $cStat == '155')
+                ) {
                     $resp['status'] = false;
                     $resp['message'][] = "NFe CANCELADA";
                     $resp['submessage'] = "{$dhEvento} - {$nProt}";
@@ -2722,9 +2726,9 @@ class Danfe extends DaCommon
         //O/CST ou O/CSOSN
         $x     += $w3;
         $w4    = round($w * 0.05, 0);
-        $texto = 'O/CSOSN';//Regime do Simples CRT = 1 ou CRT = 2
-        if ($this->getTagValue($this->emit, 'CRT') == '3') {
-            $texto = 'O/CST';//Regime Normal
+        $texto = 'O/CST'; // CRT = 2 ou CRT = 3
+        if ($this->getTagValue($this->emit, 'CRT') == '1') {
+            $texto = 'O/CSOSN';//Regime do Simples CRT = 1
         }
         $aFont = ['font' => $this->fontePadrao, 'size' => 6, 'style' => ''];
         $this->pdf->textBox($x, $y, $w4, $h, $texto, $aFont, 'C', 'C', 0, '', false);
